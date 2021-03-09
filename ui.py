@@ -4,6 +4,12 @@ from pageBrain import PageBrain
 import random
 import pyperclip # third party library
 
+#------------------------- Constants -----------------------------#
+# for password generation
+LETTERS = list("abcdefghijklmnopqrstuvwxyz")
+NUMBERS = list("0123456789")
+SYMBOLS = list("!#$%&()*+")
+        
 
 class MainWindow:
     def __init__(self):
@@ -82,18 +88,14 @@ class FormFrame(Frame):
         self.searchButton.config(command=self.searchPassword)
         self.searchButton.grid(column=2, row=1, sticky=W)
         
-        # for password generation
-        self.letters = list("abcdefghijklmnopqrstuvwxyz")
-        self.numbers = list("0123456789")
-        self.symbols = list("!#$%&()*+")
         
     def generatePassword(self):
         num_letters = random.randint(8, 10) # 8 to 10 letters
         num_symbols = random.randint(2, 4)  # 2 to 4 symbols
         num_numbers = random.randint(2, 4)  # 2 to 4 numbers
-        chosenLetters = random.choices(self.letters, k=num_letters)
-        chosenSymbols = random.choices(self.symbols, k=num_symbols)
-        chosenNumbers = random.choices(self.numbers, k=num_numbers)
+        chosenLetters = random.choices(LETTERS, k=num_letters)
+        chosenSymbols = random.choices(SYMBOLS, k=num_symbols)
+        chosenNumbers = random.choices(NUMBERS, k=num_numbers)
         
         password = chosenLetters + chosenSymbols + chosenNumbers
         random.shuffle(password)
