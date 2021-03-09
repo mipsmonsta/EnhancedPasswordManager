@@ -15,6 +15,7 @@ class MainWindow:
     def __init__(self):
         
         self.window = Tk()
+        self.window.resizable(False, False)
         self.window.title("Password Manager")
         self.window.config(padx=2, bg="white")
         
