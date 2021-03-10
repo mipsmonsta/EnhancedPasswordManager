@@ -1,6 +1,9 @@
 from tkinter import *
 from tkinter import messagebox
+from tkinter.simpledialog import askstring
 from pageBrain import PageBrain
+            
+
 import random
 import pyperclip # third party library
 
@@ -33,8 +36,18 @@ class MainWindow:
         # frame
         self.currFrame = FormFrame(self.window, pageBrain)
         self.currFrame.grid(row=0, column=1)
+        
+        # ask for session password after 1000 ms
+        self.window.after(1000, self.setMasterPassword, pageBrain)
     
         self.window.mainloop() 
+
+    def setMasterPassword(self, page):
+        if page.masterPassword == None:
+            masterpw = askstring(title="Session Password", prompt="Enter Password")
+            if len(masterpw):
+                page.masterPassword = masterpw
+        
         
 class FormFrame(Frame):
     def __init__(self, parent, page: PageBrain):
@@ -135,9 +148,14 @@ class FormFrame(Frame):
         trimmedSearchWord = searchWord.strip()
             
         if trimmedSearchWord in self.pageBrain.jsonDict['data']:
-            msg = f"Email/User: {self.pageBrain.jsonDict['data'][trimmedSearchWord]['emailUser']}\nPassword: {self.pageBrain.jsonDict['data'][trimmedSearchWord]['password']}"
+            userEmailCipher = self.pageBrain.jsonDict['data'][trimmedSearchWord]["emailUser"]
+            passwordCipher = self.pageBrain.jsonDict['data'][trimmedSearchWord]['password']
+            userEmailPlain = self.pageBrain.decrypt(userEmailCipher)
+            passwordPlain = self.pageBrain.decrypt(passwordCipher)
+            
+            msg = f"Email/User: {userEmailPlain}\nPassword: {passwordPlain}"
             messagebox.showinfo(title=trimmedSearchWord, message=msg, icon="info")
-            pyperclip.copy(self.pageBrain.jsonDict['data'][trimmedSearchWord]['password'])
+            pyperclip.copy(passwordPlain)
     
     def websiteChangedFindWord(self, *args):
        
