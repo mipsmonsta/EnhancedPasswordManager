@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter.simpledialog import askstring
 from pageBrain import PageBrain
+from cryptography.fernet import InvalidToken
             
 
 import random
@@ -150,12 +151,19 @@ class FormFrame(Frame):
         if trimmedSearchWord in self.pageBrain.jsonDict['data']:
             userEmailCipher = self.pageBrain.jsonDict['data'][trimmedSearchWord]["emailUser"]
             passwordCipher = self.pageBrain.jsonDict['data'][trimmedSearchWord]['password']
-            userEmailPlain = self.pageBrain.decrypt(userEmailCipher)
-            passwordPlain = self.pageBrain.decrypt(passwordCipher)
             
-            msg = f"Email/User: {userEmailPlain}\nPassword: {passwordPlain}"
-            messagebox.showinfo(title=trimmedSearchWord, message=msg, icon="info")
-            pyperclip.copy(passwordPlain)
+            try:    
+                userEmailPlain = self.pageBrain.decrypt(userEmailCipher)
+                passwordPlain = self.pageBrain.decrypt(passwordCipher)
+            except InvalidToken:
+                #re-ask for session password
+                masterpw = askstring(title="Wrong Session Password", prompt="Enter Password")
+                if len(masterpw):
+                    self.pageBrain.masterPassword = masterpw
+            else:
+                msg = f"Email/User: {userEmailPlain}\nPassword: {passwordPlain}"
+                messagebox.showinfo(title=trimmedSearchWord, message=msg, icon="info")
+                pyperclip.copy(passwordPlain)
     
     def websiteChangedFindWord(self, *args):
        

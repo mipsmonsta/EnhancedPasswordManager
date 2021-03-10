@@ -76,7 +76,10 @@ class PageBrain:
     def decrypt(self, cipher:str):
         f = Fernet(self._masterPassword)
         token = base64.b64decode(cipher.encode("utf-8"))
-        return f.decrypt(token).decode("utf-8")
+        
+        plainText = f.decrypt(token).decode("utf-8")
+            
+        return plainText
         
         
         
