@@ -48,6 +48,17 @@ class MainWindow:
             masterpw = askstring(title="Session Password", prompt="Enter Password")
             if len(masterpw):
                 page.masterPassword = masterpw
+                
+class sectionActionFrame(Frame):
+    def __init__(self, parent):
+        self.parent = parent
+        self.config(bg="white")
+        
+        self.newButton = Button(self, text="New Vault Page", bg="white")
+        self.newButton.grid(row=0, column=0)
+        
+        self.openButton = Button(self, text="Open Existing Page", bg="white")
+        self.openButton.grid(row=1, column=0)
         
         
 class FormFrame(Frame):
