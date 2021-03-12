@@ -6,6 +6,7 @@ from tkinter.filedialog import asksaveasfilename, askopenfilename
 from pageBrain import PageBrain
 from cryptography.fernet import InvalidToken
 from os import path
+import shutil
             
 
 import random
@@ -36,7 +37,7 @@ class MainWindow:
         menubar = Menu(self.window, bg="white")
         filemenu = Menu(menubar, tearoff=False)
 
-        filemenu.add_command(label="Save as", command=self.renameVaultFile)
+        filemenu.add_command(label="Save As", command=self.renameVaultFile)
         filemenu.add_command(label="Open", command=self.openFrameWithPage)
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.window.quit)
@@ -77,8 +78,16 @@ class MainWindow:
             if not fileName.endswith(".json"):
                 fileName = f"{fileName}.json"
                 
-        print(path.normpath(fileName), path.normpath(path.abspath(self.currFrame.pageBrain.fullFileName)))
-
+        dest = path.normpath(fileName)
+        source = path.normpath(path.abspath(self.currFrame.pageBrain.fullFileName))
+        if dest != source: # not the same
+            try:
+                shutil.move(source, dest)
+            except FileNotFoundError:
+                messagebox.showerror(title="File not saved", message="Error in moving file")
+            else:
+                self.currFrame.pageBrain.fullFileName = dest
+                
                         
 class FormFrame(Frame):
     def __init__(self, parent: Tk, page: PageBrain):
