@@ -5,6 +5,7 @@ from tkinter.simpledialog import askstring
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 from pageBrain import PageBrain
 from cryptography.fernet import InvalidToken
+from os import path
             
 
 import random
@@ -71,9 +72,12 @@ class MainWindow:
         fileName = asksaveasfilename(initialdir="./vault", 
                                      title="Save Page File As",
                                      filetypes=(("JSON Files", ".json"),))
-        #TODO
         
-        print(fileName)
+        if fileName:
+            if not fileName.endswith(".json"):
+                fileName = f"{fileName}.json"
+                
+        print(path.normpath(fileName), path.normpath(path.abspath(self.currFrame.pageBrain.fullFileName)))
 
                         
 class FormFrame(Frame):
