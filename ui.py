@@ -1,6 +1,8 @@
 from tkinter import *
 from tkinter import messagebox
+from tkinter import filedialog
 from tkinter.simpledialog import askstring
+from tkinter.filedialog import asksaveasfilename, askopenfilename
 from pageBrain import PageBrain
 from cryptography.fernet import InvalidToken
             
@@ -19,52 +21,65 @@ class MainWindow:
     def __init__(self):
         
         self.window = Tk()
-        self.window.resizable(False, False)
+        #self.window.geometry("400x400+100+100")
+        self.window.minsize(width=400, height=350)
+       
+        self.window.grid_columnconfigure(0, weight=1)
+        self.window.grid_rowconfigure(0, weight=1)
+
+        
         self.window.title("Password Manager")
         self.window.config(padx=2, bg="white")
         
         # menu
         menubar = Menu(self.window, bg="white")
-        filemenu = Menu(menubar, tearoff=0)
+        filemenu = Menu(menubar, tearoff=False)
 
+        filemenu.add_command(label="Save as", command=self.renameVaultFile)
+        filemenu.add_command(label="Open", command=self.openFrameWithPage)
+        filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.window.quit)
         menubar.add_cascade(label="File", menu=filemenu)
         self.window.config(menu=menubar)
         
-        #pageBrain 
-        pageBrain = PageBrain("data")
-        
         # frame
-        self.currFrame = FormFrame(self.window, pageBrain)
-        self.currFrame.grid(row=0, column=1)
-        
-        # ask for session password after 1000 ms
-        self.window.after(1000, self.setMasterPassword, pageBrain)
+        self.currFrame = None
     
         self.window.mainloop() 
+        
+    def openFrameWithPage(self):
+        defaultPageName = "./vault/data.json"
+        pageName = defaultPageName
+        fileName = askopenfilename(initialdir="./vault", 
+                                   filetypes=(("JSON Files", ".json"),))
+        if fileName:
+            pageName = fileName
+        else:
+            messagebox.showinfo(title="No file selected", message="Default page file will be used")
+        
+        pageBrain = PageBrain(pageName)
+        if self.currFrame:
+            self.currFrame.destroy()
+        self.currFrame = FormFrame(self.window, pageBrain)
+        self.currFrame.grid(row=0, column=0)
 
-    def setMasterPassword(self, page):
-        if page.masterPassword == None:
-            masterpw = askstring(title="Session Password", prompt="Enter Password")
-            if len(masterpw):
-                page.masterPassword = masterpw
-                
-class sectionActionFrame(Frame):
-    def __init__(self, parent):
-        self.parent = parent
-        self.config(bg="white")
+    def renameVaultFile(self):
+        if self.currFrame == None:
+            messagebox.showerror(title="No page opened", message="Cannot save!")
+            return
         
-        self.newButton = Button(self, text="New Vault Page", bg="white")
-        self.newButton.grid(row=0, column=0)
+        fileName = asksaveasfilename(initialdir="./vault", 
+                                     title="Save Page File As",
+                                     filetypes=(("JSON Files", ".json"),))
+        #TODO
         
-        self.openButton = Button(self, text="Open Existing Page", bg="white")
-        self.openButton.grid(row=1, column=0)
-        
-        
+        print(fileName)
+
+                        
 class FormFrame(Frame):
-    def __init__(self, parent, page: PageBrain):
+    def __init__(self, parent: Tk, page: PageBrain):
         Frame.__init__(self, parent, bg="white")
-        
+
         self.pageBrain = page
         
         self.canvas = Canvas(self, width=200, height=200, bg="white", highlightthickness=0)
@@ -114,6 +129,14 @@ class FormFrame(Frame):
         self.searchButton.config(command=self.searchPassword)
         self.searchButton.grid(column=2, row=1, sticky=W)
         
+        # after 1 sec, ask user for password for page
+        parent.after(1000, self.setMasterPassword)
+      
+    def setMasterPassword(self):
+        if self.pageBrain.masterPassword == None:
+            masterpw = askstring(title="Session Password", prompt="Enter Password")
+            if len(masterpw):
+                self.pageBrain.masterPassword = masterpw  
         
     def generatePassword(self):
         num_letters = random.randint(8, 10) # 8 to 10 letters

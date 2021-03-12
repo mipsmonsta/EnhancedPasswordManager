@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 class PageBrain:
     
     def __init__(self, fileName):
-        self.fullFileName = f"./vault/{fileName}.json"
+        self.fullFileName = fileName
         self.jsonDict = None
         self.trie = None
         self._masterPassword = None
@@ -21,7 +21,6 @@ class PageBrain:
         try:
             with open(self.fullFileName) as reader:
                 self.jsonDict = json.load(reader)
-
         except FileNotFoundError:
             base64_msg = base64.b64encode(os.urandom(16)).decode("utf-8")
             
