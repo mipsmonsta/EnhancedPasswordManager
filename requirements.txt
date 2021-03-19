@@ -1,4 +1,14 @@
+certifi==2020.12.5
 cffi==1.14.5
+chardet==4.0.0
 cryptography==3.4.6
+dropbox==11.4.1
+idna==2.10
+pkg-resources==0.0.0
+ply==3.11
 pycparser==2.20
 pyperclip==1.8.2
+requests==2.25.1
+six==1.15.0
+stone==3.2.1
+urllib3==1.26.4

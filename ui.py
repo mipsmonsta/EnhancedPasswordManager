@@ -32,7 +32,7 @@ class MainWindow:
         self.window.title("Password Manager")
         self.window.config(padx=2, bg="white")
 
-        # menu
+        # menu - file
         menubar = Menu(self.window, bg="white")
         filemenu = Menu(menubar, tearoff=False)
 
@@ -41,6 +41,13 @@ class MainWindow:
         filemenu.add_separator()
         filemenu.add_command(label="Exit", command=self.window.quit)
         menubar.add_cascade(label="File", menu=filemenu)
+
+        # menu - tools cascade
+        self.toolMenu = Menu(menubar, tearoff=False)
+        self.toolMenu.add_command(label="Link Dropbox", command=self.logInDropbox)
+        self.toolMenu.add_command(label="Backup Vault to Dropbox", command=self.backup)
+        self._disableMenuItem(self.toolMenu, "Backup Vault to Dropbox")
+        menubar.add_cascade(label = "Tools", menu=self.toolMenu)
         self.window.config(menu=menubar)
 
         # frame
@@ -50,6 +57,22 @@ class MainWindow:
         self._createVaultFolder()
 
         self.window.mainloop()
+
+    def _disableMenuItem(self, menu, itemName=None):
+        if itemName == None:
+            return
+        menu.entryconfig(itemName, state="disabled")
+        
+    def _enableMenuItem(self, menu, itemName=None):
+        if itemName == None:
+            return
+        menu.entryconfig(itemName, state="normal")
+
+    def logInDropbox(self):
+        pass
+
+    def backup(self):
+        pass
 
     def _createVaultFolder(self):
         folderPath = "./vault"
