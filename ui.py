@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import messagebox
 from tkinter import filedialog
+from tkinter import simpledialog
 from tkinter.simpledialog import askstring
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 from pageBrain import PageBrain
@@ -8,6 +9,9 @@ from cryptography.fernet import InvalidToken
 from os import path
 import shutil
 from pathlib import Path
+from dropboxUtility import obtainDropboxAuthFlow
+import webbrowser
+import json
 
 import random
 import pyperclip  # third party library
@@ -18,6 +22,9 @@ LETTERS = list("abcdefghijklmnopqrstuvwxyz")
 NUMBERS = list("0123456789")
 SYMBOLS = list("!#$%&()*+")
 
+#------------------------- Menu Labels ---------------------------#
+LINKDROPBOX = "Link to Dropbox"
+BACKUPTODROPBOX = "Backup Vault to Dropbox"
 
 class MainWindow:
     def __init__(self):
@@ -44,9 +51,9 @@ class MainWindow:
 
         # menu - tools cascade
         self.toolMenu = Menu(menubar, tearoff=False)
-        self.toolMenu.add_command(label="Link Dropbox", command=self.logInDropbox)
-        self.toolMenu.add_command(label="Backup Vault to Dropbox", command=self.backup)
-        self._disableMenuItem(self.toolMenu, "Backup Vault to Dropbox")
+        self.toolMenu.add_command(label=LINKDROPBOX, command=self.logInDropbox)
+        self.toolMenu.add_command(label=BACKUPTODROPBOX, command=self.backup)
+        self._disableMenuItem(self.toolMenu, BACKUPTODROPBOX)
         menubar.add_cascade(label = "Tools", menu=self.toolMenu)
         self.window.config(menu=menubar)
 
@@ -58,6 +65,8 @@ class MainWindow:
 
         self.window.mainloop()
 
+    # Helpers
+
     def _disableMenuItem(self, menu, itemName=None):
         if itemName == None:
             return
@@ -68,15 +77,48 @@ class MainWindow:
             return
         menu.entryconfig(itemName, state="normal")
 
-    def logInDropbox(self):
-        pass
-
-    def backup(self):
-        pass
 
     def _createVaultFolder(self):
         folderPath = "./vault"
         Path(folderPath).mkdir(parents=True, exist_ok=True)
+
+
+    # Callbacks - Commands
+
+    def logInDropbox(self):
+        auth_flow = obtainDropboxAuthFlow()
+        
+        authorize_url = auth_flow.start()
+        #print("1. Go to: " + authorize_url)
+        #print("2. Click \"Allow\" (you might have to log in first).")
+        #print("3. Copy the authorization code.")
+        webbrowser.open_new_tab(authorize_url)
+
+        auth_code = simpledialog.askstring(title="Authorization Code", prompt="Enter the Dropbox Authorization Code:")
+        if auth_code:
+            auth_code.strip()
+        else:
+            messagebox.showerror(title="Error Authorization Code", message="Check your Authorization Code")
+            return    
+
+        try:
+            oauth_result = auth_flow.finish(auth_code)
+            #print(oauth_result)
+        except Exception as e:
+            #print('Error: %s' % (e,))
+            messagebox.showerror(title="Error Linking Dropbox", message="Unable to complete Dropbox OAuth")            
+        else:
+            #save token
+            dbToken = { "refresh": oauth_result.refresh_token }
+            with open("./.dbjson", "w") as writer:
+                json.dump(dbToken, writer, indent=4)
+            
+        return
+
+
+    def backup(self):
+        pass
+
 
     def openFrameWithPage(self):
         defaultPageName = "./vault/data.json"
