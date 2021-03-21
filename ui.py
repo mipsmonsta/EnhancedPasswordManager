@@ -9,7 +9,7 @@ from cryptography.fernet import InvalidToken
 from os import path
 import shutil
 from pathlib import Path
-from dropboxUtility import obtainDropboxAuthFlow
+from dropboxUtility import obtainDropboxAuthFlow, saveLocalRefreshToken, isFileExistsAtDBRoot, uploadFileAtDBRoot
 import webbrowser
 import json
 
@@ -58,7 +58,7 @@ class MainWindow:
         self.window.config(menu=menubar)
 
         # frame
-        self.currFrame = SimpleFromIconFrame()
+        self.currFrame = SimpleFormIconFrame()
         self.currFrame.grid(row=0, column=0)
 
         self._createVaultFolder()
@@ -109,15 +109,24 @@ class MainWindow:
             messagebox.showerror(title="Error Linking Dropbox", message="Unable to complete Dropbox OAuth")            
         else:
             #save token
-            dbToken = { "refresh": oauth_result.refresh_token }
-            with open("./.dbjson", "w") as writer:
-                json.dump(dbToken, writer, indent=4)
+            saveLocalRefreshToken(oauth_result.refresh_token)
             
         return
 
 
     def backup(self):
-        pass
+        if isinstance(self.currFrame, FormFrame) == False:
+            messagebox.showwarning(title="Cannot Backup", message="No page to backup!")
+            return
+        
+        currentPageBrain = self.currFrame.pageBrain
+
+        #TODO: Check page file exists on DB, is yes ask User to proceed.
+        #TODO: Upload page file to DB
+
+        
+        
+
 
 
     def openFrameWithPage(self):
@@ -165,7 +174,7 @@ class MainWindow:
                 self.currFrame.pageBrain.fullFileName = dest
 
 
-class SimpleFromIconFrame(Frame):
+class SimpleFormIconFrame(Frame):
     def __init__(self):
         Frame.__init__(self, bg="white")
 
