@@ -1,15 +1,15 @@
 from tkinter import *
 from tkinter import messagebox
-from tkinter import filedialog
 from tkinter import simpledialog
 from tkinter.simpledialog import askstring
 from tkinter.filedialog import asksaveasfilename, askopenfilename
 from pageBrain import PageBrain
 from cryptography.fernet import InvalidToken
 from os import path
+from pathlib import Path
 import shutil
 from pathlib import Path
-from dropboxUtility import obtainDropboxAuthFlow, saveLocalRefreshToken, isFileExistsAtDBRoot, uploadFileAtDBRoot
+from dropboxUtility import isLinkedToDBBefore, obtainDropboxAuthFlow, saveLocalRefreshToken, isFileExistsAtDBRoot, uploadFileAtDBRoot, isLinkedToDBBefore
 import webbrowser
 import json
 
@@ -53,9 +53,9 @@ class MainWindow:
         self.toolMenu = Menu(menubar, tearoff=False)
         self.toolMenu.add_command(label=LINKDROPBOX, command=self.logInDropbox)
         self.toolMenu.add_command(label=BACKUPTODROPBOX, command=self.backup)
-        self._disableMenuItem(self.toolMenu, BACKUPTODROPBOX)
         menubar.add_cascade(label = "Tools", menu=self.toolMenu)
         self.window.config(menu=menubar)
+        self._uIActionsIfLinkedToDB() # enable/ disable menu for DB based on linked statuss
 
         # frame
         self.currFrame = SimpleFormIconFrame()
@@ -66,6 +66,15 @@ class MainWindow:
         self.window.mainloop()
 
     # Helpers
+
+    def _uIActionsIfLinkedToDB(self):
+        if isLinkedToDBBefore():
+            self._disableMenuItem(self.toolMenu, LINKDROPBOX)
+            self._enableMenuItem(self.toolMenu, BACKUPTODROPBOX)
+        else:
+            self._enableMenuItem(self.toolMenu, LINKDROPBOX)
+            self._disableMenuItem(self.toolMenu, BACKUPTODROPBOX)
+
 
     def _disableMenuItem(self, menu, itemName=None):
         if itemName == None:
@@ -81,7 +90,6 @@ class MainWindow:
     def _createVaultFolder(self):
         folderPath = "./vault"
         Path(folderPath).mkdir(parents=True, exist_ok=True)
-
 
     # Callbacks - Commands
 
@@ -110,25 +118,33 @@ class MainWindow:
         else:
             #save token
             saveLocalRefreshToken(oauth_result.refresh_token)
-            
+            self._uIActionsIfLinkedToDB() # enable / disable menu related to DB based on link status
+
         return
 
 
     def backup(self):
         if isinstance(self.currFrame, FormFrame) == False:
-            messagebox.showwarning(title="Cannot Backup", message="No page to backup!")
+            messagebox.showwarning(title="Backup", message="No page to backup!")
             return
         
         currentPageBrain = self.currFrame.pageBrain
 
-        #TODO: Check page file exists on DB, is yes ask User to proceed.
-        #TODO: Upload page file to DB
+        # Check page file exists on DB, is yes ask User to proceed.
+        dbFilePath = f"/{Path(currentPageBrain.fullFileName).name}"
+        if isFileExistsAtDBRoot(dbFilePath):
+            answer = messagebox.askyesno(title="Dropbox", message="Overwrite page file in Dropbox?")
+            if answer == False:
+                return
 
+        # Upload page file to DB
+        if uploadFileAtDBRoot(dbFilePath, currentPageBrain.fullFileName) == False:
+            messagebox.showerror(title="Error", message="Page file not uploaded to Dropbox")
+        else:
+            messagebox.showinfo(title="Success", message="Uploaded Page File to Dropbox.")
         
+        return
         
-
-
-
     def openFrameWithPage(self):
         defaultPageName = "./vault/data.json"
         pageName = defaultPageName

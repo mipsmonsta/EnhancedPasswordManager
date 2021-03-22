@@ -20,6 +20,11 @@ def getLocalRefreskToken()-> str:
     
     return dbTokenDict["refresh"]
 
+def isLinkedToDBBefore()-> bool:
+    if getLocalRefreskToken != None:
+        return True
+    return False
+
 def saveLocalRefreshToken(token: str) -> bool:
     result = True
 
@@ -34,7 +39,7 @@ def saveLocalRefreshToken(token: str) -> bool:
 
 def isFileExistsAtDBRoot(filePath: str) -> bool:
     result = True
-    dbx = dropbox.Dropbox(oauth2_refresh_token=getLocalRefreskToken)
+    dbx = dropbox.Dropbox(oauth2_refresh_token=getLocalRefreskToken(), app_key=DB_APP_KEY)
     try:
         dbx.files_get_metadata(filePath)
     except exceptions.ApiError:
@@ -46,16 +51,17 @@ def isFileExistsAtDBRoot(filePath: str) -> bool:
 
 def uploadFileAtDBRoot(filePath: str, localFilePath: str)-> bool:
 
-    dbx = dropbox.Dropbox(oauth2_refresh_token=getLocalRefreskToken)
+    dbx = dropbox.Dropbox(oauth2_refresh_token=getLocalRefreskToken(), app_key=DB_APP_KEY)
     mode = files.WriteMode.overwrite
 
     while "//" in filePath:
         filePath.replace("//", "/")
 
-    mtime = os.path.getmtime(filePath)
+    mtime = os.path.getmtime(localFilePath)
 
+    data = None
     try:
-        with open(localFilePath, "r") as reader:
+        with open(localFilePath, "rb") as reader: # important to open in "rb" which is read in binary 
             data = reader.read()
     except FileNotFoundError:
         dbx.close()
