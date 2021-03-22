@@ -21,7 +21,7 @@ def getLocalRefreskToken()-> str:
     return dbTokenDict["refresh"]
 
 def isLinkedToDBBefore()-> bool:
-    if getLocalRefreskToken != None:
+    if getLocalRefreskToken() != None:
         return True
     return False
 
